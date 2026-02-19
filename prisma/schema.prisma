@@ -1,0 +1,60 @@
+// Family Expense Tracker - Prisma schema
+// Use SQLite for local dev; switch to PostgreSQL by changing provider and DATABASE_URL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  accounts     Account[]
+}
+
+model Account {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name              String
+  source            String   // "plaid" | "upload"
+  institutionName   String?  @map("institution_name")
+  plaidItemId       String?  @map("plaid_item_id")
+  plaidAccountId    String?  @map("plaid_account_id")
+  plaidAccessToken  String?  @map("plaid_access_token")
+  plaidCursor       String?  @map("plaid_cursor")
+  createdAt         DateTime @default(now()) @map("created_at")
+  transactions      Transaction[]
+}
+
+model Transaction {
+  id                 String   @id @default(cuid())
+  accountId          String   @map("account_id")
+  account            Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  date               DateTime
+  amount             Float    // negative = expense, positive = income
+  currency           String   @default("USD")
+  merchantName       String   @map("merchant_name")
+  category           String?  // Plaid category or custom
+  source             String   @default("upload") // "plaid" | "upload"
+  plaidTransactionId String?  @unique @map("plaid_transaction_id")
+  rawId              String?  @map("raw_id") // hash for upload dedup
+  notes              String?
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@index([accountId, date])
+  @@index([date])
+  @@index([rawId])
+}
+
+model Category {
+  id   String @id @default(cuid())
+  name String @unique
+  type String @default("expense") // "expense" | "income"
+}
