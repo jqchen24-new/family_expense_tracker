@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ConnectPlaidButton } from "./ConnectPlaidButton";
 import { AccountActions } from "./AccountActions";
+import { ConsolidateDuplicates } from "./ConsolidateDuplicates";
 
 export default async function AccountsPage() {
   const session = await auth();
@@ -24,8 +25,18 @@ export default async function AccountsPage() {
       </div>
 
       {accounts.length > 0 && (
+        <ConsolidateDuplicates
+          accounts={accounts.map((a) => ({
+            id: a.id,
+            name: a.name,
+            transactionCount: a._count.transactions,
+          }))}
+        />
+      )}
+
+      {accounts.length > 0 && (
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          To consolidate duplicate names (e.g. &quot;Amex Gold&quot; and &quot;Amex Gold (1)&quot;), use <strong>Merge into another account</strong> on the account you want to remove; its transactions will move into the account you choose.
+          To merge two specific accounts, use <strong>Merge into another account</strong> on the account you want to remove.
         </p>
       )}
 

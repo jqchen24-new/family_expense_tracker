@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const end = searchParams.get("end");
   const accountId = searchParams.get("accountId");
   const category = searchParams.get("category");
-  const limit = Math.min(Number(searchParams.get("limit")) || 100, 500);
+  const limit = Math.min(Number(searchParams.get("limit")) || 500, 2000);
   const offset = Number(searchParams.get("offset")) || 0;
 
   const accounts = await prisma.account.findMany({
