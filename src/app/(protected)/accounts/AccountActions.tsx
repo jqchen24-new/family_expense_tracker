@@ -18,6 +18,7 @@ export function AccountActions({
   const [merging, setMerging] = useState(false);
   const [mergeTargetId, setMergeTargetId] = useState("");
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function handleRename(e: React.FormEvent) {
     e.preventDefault();
@@ -77,6 +78,26 @@ export function AccountActions({
     }
   }
 
+  async function handleDelete() {
+    const message =
+      account.transactionCount > 0
+        ? `Delete "${account.name}" and its ${account.transactionCount} transaction(s)? This cannot be undone.`
+        : `Delete "${account.name}"? This cannot be undone.`;
+    if (!confirm(message)) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/accounts/${account.id}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.error ?? "Delete failed");
+        return;
+      }
+      router.refresh();
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const canMerge = otherAccounts.length > 0;
 
   return (
@@ -107,6 +128,15 @@ export function AccountActions({
           </button>
         </form>
       )}
+
+      <button
+        type="button"
+        onClick={handleDelete}
+        disabled={loading || deleting}
+        className="text-xs text-red-600 dark:text-red-400 hover:underline disabled:opacity-50"
+      >
+        {deleting ? "Deleting…" : "Delete account"}
+      </button>
 
       {canMerge && (
         <>
