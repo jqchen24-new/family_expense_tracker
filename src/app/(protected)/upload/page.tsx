@@ -2,18 +2,20 @@
 
 import { useState } from "react";
 
+type FileResult = { accountId: string; name: string; imported: number; skipped: number };
+
 export default function UploadPage() {
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [accountName, setAccountName] = useState("");
   const [format, setFormat] = useState<"generic" | "chase">("generic");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ imported: number; skipped: number; accountId: string } | null>(null);
+  const [result, setResult] = useState<{ results: FileResult[]; imported: number; skipped: number } | null>(null);
   const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!file) {
-      setError("Please select a CSV file");
+    if (files.length === 0) {
+      setError("Please select one or more CSV files");
       return;
     }
     setError("");
@@ -21,7 +23,9 @@ export default function UploadPage() {
     setLoading(true);
     try {
       const formData = new FormData();
-      formData.set("file", file);
+      for (const file of files) {
+        formData.append("file", file);
+      }
       formData.set("accountName", accountName || "Uploaded statement");
       formData.set("format", format);
       const res = await fetch("/api/upload/statement", {
@@ -34,8 +38,12 @@ export default function UploadPage() {
         setLoading(false);
         return;
       }
-      setResult({ imported: data.imported, skipped: data.skipped ?? 0, accountId: data.accountId });
-      setFile(null);
+      setResult({
+        results: data.results ?? [{ accountId: data.accountId, name: "Uploaded statement", imported: data.imported, skipped: data.skipped ?? 0 }],
+        imported: data.imported ?? 0,
+        skipped: data.skipped ?? 0,
+      });
+      setFiles([]);
       setAccountName("");
     } catch {
       setError("Something went wrong");
@@ -57,10 +65,21 @@ export default function UploadPage() {
           </p>
         )}
         {result && (
-          <p className="text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-md">
-            Imported {result.imported} transaction{result.imported !== 1 ? "s" : ""}
-            {result.skipped > 0 && `, ${result.skipped} duplicate(s) skipped`}.
-          </p>
+          <div className="text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded-md space-y-1">
+            <p>
+              Imported {result.imported} transaction{result.imported !== 1 ? "s" : ""}
+              {result.skipped > 0 && `, ${result.skipped} duplicate(s) skipped`}.
+            </p>
+            {result.results.length > 1 && (
+              <ul className="list-disc list-inside mt-1 text-zinc-600 dark:text-zinc-400">
+                {result.results.map((r) => (
+                  <li key={r.accountId}>
+                    {r.name}: {r.imported} imported{r.skipped > 0 ? `, ${r.skipped} skipped` : ""}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         )}
 
         <div>
@@ -87,18 +106,24 @@ export default function UploadPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">CSV file</label>
+          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">CSV file(s)</label>
           <input
             type="file"
             accept=".csv,text/csv"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            multiple
+            onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
             className="w-full rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 px-3 py-2 text-zinc-900 dark:text-zinc-100 file:mr-2 file:rounded file:border-0 file:bg-zinc-100 file:px-3 file:py-1 file:text-sm"
           />
+          {files.length > 0 && (
+            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+              {files.length} file{files.length !== 1 ? "s" : ""} selected
+            </p>
+          )}
         </div>
 
         <button
           type="submit"
-          disabled={loading || !file}
+          disabled={loading || files.length === 0}
           className="rounded-lg bg-blue-600 text-white px-4 py-2 font-medium hover:bg-blue-700 disabled:opacity-50"
         >
           {loading ? "Uploading…" : "Upload"}

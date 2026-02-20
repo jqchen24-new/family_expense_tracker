@@ -1,8 +1,8 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 import { ConnectPlaidButton } from "./ConnectPlaidButton";
+import { AccountActions } from "./AccountActions";
 
 export default async function AccountsPage() {
   const session = await auth();
@@ -23,11 +23,17 @@ export default async function AccountsPage() {
         <span className="text-sm text-zinc-500 dark:text-zinc-400">or upload statements on the Upload page</span>
       </div>
 
+      {accounts.length > 0 && (
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          To consolidate duplicate names (e.g. &quot;Amex Gold&quot; and &quot;Amex Gold (1)&quot;), use <strong>Merge into another account</strong> on the account you want to remove; its transactions will move into the account you choose.
+        </p>
+      )}
+
       <div className="space-y-3">
         {accounts.map((account) => (
           <div
             key={account.id}
-            className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4 flex items-center justify-between"
+            className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-4 flex items-center justify-between gap-4"
           >
             <div>
               <p className="font-medium text-zinc-900 dark:text-zinc-50">{account.name}</p>
@@ -38,9 +44,27 @@ export default async function AccountsPage() {
                 {account._count.transactions} transaction{account._count.transactions !== 1 ? "s" : ""}
               </p>
             </div>
-            <span className="rounded-full bg-zinc-100 dark:bg-zinc-700 px-2.5 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">
-              {account.source}
-            </span>
+            <div className="flex items-center gap-4 shrink-0">
+              <AccountActions
+                account={{
+                  id: account.id,
+                  name: account.name,
+                  source: account.source,
+                  transactionCount: account._count.transactions,
+                }}
+                otherAccounts={accounts
+                  .filter((a) => a.id !== account.id)
+                  .map((a) => ({
+                    id: a.id,
+                    name: a.name,
+                    source: a.source,
+                    transactionCount: a._count.transactions,
+                  }))}
+              />
+              <span className="rounded-full bg-zinc-100 dark:bg-zinc-700 px-2.5 py-1 text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                {account.source}
+              </span>
+            </div>
           </div>
         ))}
         {accounts.length === 0 && (
