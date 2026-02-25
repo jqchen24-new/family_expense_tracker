@@ -35,16 +35,22 @@ export async function POST(request: Request) {
           plaidAccountId: acct.account_id,
         },
       });
+      const mask = acct.mask != null ? String(acct.mask) : null;
       if (existing) {
         await prisma.account.update({
           where: { id: existing.id },
-          data: { plaidAccessToken: accessToken, name: acct.name || acct.official_name || existing.name },
+          data: {
+            plaidAccessToken: accessToken,
+            name: acct.name || acct.official_name || existing.name,
+            mask,
+          },
         });
       } else {
         await prisma.account.create({
           data: {
             userId: session.user.id,
             name: acct.name || acct.official_name || acct.account_id,
+            mask,
             source: "plaid",
             institutionName,
             plaidItemId: itemId,

@@ -8,7 +8,8 @@ export async function POST(request: Request) {
   const webhookCode = body.webhook_code as string;
   const itemId = body.item_id as string | undefined;
 
-  if (webhookType !== "TRANSACTIONS" || (webhookCode !== "DEFAULT_UPDATE" && webhookCode !== "INITIAL_UPDATE")) {
+  const syncCodes = ["DEFAULT_UPDATE", "INITIAL_UPDATE", "SYNC_UPDATES_AVAILABLE"];
+if (webhookType !== "TRANSACTIONS" || !syncCodes.includes(webhookCode)) {
     return NextResponse.json({ received: true });
   }
 
