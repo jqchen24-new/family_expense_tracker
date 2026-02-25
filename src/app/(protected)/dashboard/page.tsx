@@ -19,6 +19,10 @@ export default async function DashboardPage() {
   });
   const accountIds = accounts.map((a) => a.id);
 
+  const excludeLoanPayments = {
+    OR: [{ category: null }, { category: { not: "Loan_payments" } }],
+  } as const;
+
   const thisMonthExpenses =
     accountIds.length === 0
       ? { _sum: { amount: 0 as number | null } }
@@ -27,6 +31,7 @@ export default async function DashboardPage() {
             accountId: { in: accountIds },
             date: { gte: startOfMonth, lte: endOfMonth },
             amount: { lt: 0 },
+            ...excludeLoanPayments,
           },
           _sum: { amount: true },
         });
@@ -38,6 +43,7 @@ export default async function DashboardPage() {
             accountId: { in: accountIds },
             date: { gte: startOfLastMonth, lte: endOfLastMonth },
             amount: { lt: 0 },
+            ...excludeLoanPayments,
           },
           _sum: { amount: true },
         });
@@ -55,17 +61,48 @@ export default async function DashboardPage() {
             accountId: { in: accountIds },
             date: { gte: startOfMonth, lte: endOfMonth },
             amount: { lt: 0 },
+            ...excludeLoanPayments,
           },
           _sum: { amount: true },
         });
 
   const categoryData = byCategory
+    .filter((r) => r.category !== "Loan_payments")
     .map((r) => ({
       name: r.category || "Uncategorized",
       value: Math.abs(r._sum.amount ?? 0),
     }))
     .sort((a, b) => b.value - a.value)
     .slice(0, 10);
+
+  // Total spending by month (last 12 months)
+  const monthsBack = 12;
+  const rangeStart = new Date(now.getFullYear(), now.getMonth() - monthsBack + 1, 1);
+  const monthlyTxs =
+    accountIds.length === 0
+      ? []
+      : await prisma.transaction.findMany({
+          where: {
+            accountId: { in: accountIds },
+            date: { gte: rangeStart, lte: endOfMonth },
+            amount: { lt: 0 },
+            ...excludeLoanPayments,
+          },
+          select: { date: true, amount: true },
+        });
+  const byMonthMap = new Map<string, number>();
+  for (let i = 0; i < monthsBack; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - monthsBack + 1 + i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    byMonthMap.set(key, 0);
+  }
+  for (const t of monthlyTxs) {
+    const key = `${t.date.getFullYear()}-${String(t.date.getMonth() + 1).padStart(2, "0")}`;
+    if (byMonthMap.has(key)) byMonthMap.set(key, (byMonthMap.get(key) ?? 0) + Math.abs(t.amount));
+  }
+  const monthlySpending = Array.from(byMonthMap.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([month, total]) => ({ month, total }));
 
   return (
     <div className="space-y-6">
@@ -90,7 +127,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <DashboardCharts categoryData={categoryData} />
+      <DashboardCharts categoryData={categoryData} monthlySpending={monthlySpending} />
     </div>
   );
 }

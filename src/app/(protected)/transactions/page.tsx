@@ -247,7 +247,7 @@ export default function TransactionsPage() {
             type="date"
             value={start}
             onChange={(e) => setStart(e.target.value)}
-            className="rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 px-2 py-1.5 text-sm"
+            className="rounded-lg h-10 bg-zinc-50 dark:bg-zinc-700/50 border border-zinc-200 dark:border-zinc-600 px-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600 focus:border-transparent transition-shadow"
           />
         </div>
         <div>
@@ -256,7 +256,7 @@ export default function TransactionsPage() {
             type="date"
             value={end}
             onChange={(e) => setEnd(e.target.value)}
-            className="rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 px-2 py-1.5 text-sm"
+            className="rounded-lg h-10 bg-zinc-50 dark:bg-zinc-700/50 border border-zinc-200 dark:border-zinc-600 px-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600 focus:border-transparent transition-shadow"
           />
         </div>
         <div>
@@ -264,7 +264,7 @@ export default function TransactionsPage() {
           <select
             value={accountId}
             onChange={(e) => setAccountId(e.target.value)}
-            className="rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 px-2 py-1.5 text-sm"
+            className="rounded-lg h-10 bg-zinc-50 dark:bg-zinc-700/50 border border-zinc-200 dark:border-zinc-600 px-3 text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600 focus:border-transparent transition-shadow cursor-pointer min-w-[120px]"
           >
             <option value="">All</option>
             {accounts.map((a) => (
@@ -279,7 +279,7 @@ export default function TransactionsPage() {
             placeholder="Filter by category"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 px-2 py-1.5 text-sm w-40"
+            className="rounded-lg h-10 bg-zinc-50 dark:bg-zinc-700/50 border border-zinc-200 dark:border-zinc-600 px-3 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600 focus:border-transparent transition-shadow w-40"
           />
         </div>
       </div>
