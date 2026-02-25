@@ -52,20 +52,22 @@ export function DashboardCharts({
         {monthlySpending.length === 0 || !hasMonthly ? (
           <p className="text-zinc-500 dark:text-zinc-400 py-8">No spending data in the last 12 months.</p>
         ) : (
-          <div className="w-full min-h-[280px]" style={{ height: 280 }}>
+          <div className="w-full min-h-[360px]" style={{ height: 360 }}>
             {mounted && (
-              <ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={360}>
                 <BarChart
                   data={monthlySpending.map((d) => ({ ...d, label: formatMonth(d.month) }))}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 56 }}
+                  margin={{ top: 16, right: 16, left: 0, bottom: 100 }}
                 >
                   <XAxis
                     dataKey="label"
-                    angle={-35}
+                    angle={-45}
                     textAnchor="end"
-                    height={56}
+                    height={90}
                     tick={{ fontSize: 11 }}
                     interval={0}
+                    axisLine={false}
+                    tickMargin={12}
                   />
                   <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v}`} />
                   <Tooltip
@@ -84,19 +86,22 @@ export function DashboardCharts({
         <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50 mb-4">Spending by category (this month)</h2>
         <div className="h-96">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={categoryData} margin={{ top: 10, right: 10, left: 0, bottom: 120 }}>
-            <XAxis
+          <BarChart
+            layout="vertical"
+            data={categoryData}
+            margin={{ top: 8, right: 16, left: 4, bottom: 8 }}
+          >
+            <XAxis type="number" tick={{ fontSize: 12 }} tickFormatter={(v: number) => `$${v}`} />
+            <YAxis
+              type="category"
               dataKey="name"
-              angle={-45}
-              textAnchor="end"
-              height={100}
+              width={140}
               tick={{ fontSize: 11 }}
               interval={0}
               tickFormatter={formatCategoryLabel}
             />
-            <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${v}`} />
             <Tooltip formatter={(value: number | undefined) => [value != null ? `$${value.toFixed(2)}` : "", "Spent"]} />
-            <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Spent" />
+            <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} name="Spent" barCategoryGap="12%" />
           </BarChart>
         </ResponsiveContainer>
       </div>
