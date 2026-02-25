@@ -19,8 +19,16 @@ export default async function DashboardPage() {
   });
   const accountIds = accounts.map((a) => a.id);
 
+  const paymentCategoryNames = [
+    "Loan_payments",
+    "LOAN_PAYMENTS",
+    "Loan payments",
+    "Payments",
+    "Payment",
+    "LOAN_PAYMENT",
+  ];
   const excludeLoanPayments = {
-    OR: [{ category: null }, { category: { not: "Loan_payments" } }],
+    OR: [{ category: null }, { category: { notIn: paymentCategoryNames } }],
   } as const;
 
   const thisMonthExpenses =
@@ -66,8 +74,17 @@ export default async function DashboardPage() {
           _sum: { amount: true },
         });
 
+  const isPaymentCategory = (cat: string | null) => {
+    if (cat == null) return false;
+    const lower = cat.toLowerCase();
+    return (
+      paymentCategoryNames.some((n) => n.toLowerCase() === lower) ||
+      lower.includes("loan_payment") ||
+      lower.includes("loan payment")
+    );
+  };
   const categoryData = byCategory
-    .filter((r) => r.category !== "Loan_payments")
+    .filter((r) => !isPaymentCategory(r.category))
     .map((r) => ({
       name: r.category || "Uncategorized",
       value: Math.abs(r._sum.amount ?? 0),
