@@ -31,10 +31,19 @@ export async function GET(request: Request) {
   if (start) dateFilter.gte = new Date(start);
   if (end) dateFilter.lte = new Date(end);
 
+  const categoryFilter = (() => {
+    const c = category?.trim();
+    if (!c) return undefined;
+    if (c === "Uncategorized" || c === "—" || c.toLowerCase() === "uncategorized") {
+      return { category: null };
+    }
+    return { category: { contains: c } };
+  })();
+
   const where = {
     accountId: (accountId && accountIds.includes(accountId)) ? accountId : { in: accountIds },
     ...(Object.keys(dateFilter).length > 0 && { date: dateFilter }),
-    ...(category && { category }),
+    ...(categoryFilter && categoryFilter),
   };
 
   const [transactions, total] = await Promise.all([
@@ -80,10 +89,19 @@ export async function DELETE(request: Request) {
     if (start) dateFilter.gte = new Date(start);
     if (end) dateFilter.lte = new Date(end);
 
+    const categoryFilter = (() => {
+      const c = typeof category === "string" ? category.trim() : "";
+      if (!c) return undefined;
+      if (c === "Uncategorized" || c === "—" || c.toLowerCase() === "uncategorized") {
+        return { category: null };
+      }
+      return { category: { contains: c } };
+    })();
+
     const where = {
       accountId: (accountId && accountIds.includes(accountId)) ? accountId : { in: accountIds },
       ...(Object.keys(dateFilter).length > 0 && { date: dateFilter }),
-      ...(category && { category }),
+      ...(categoryFilter && categoryFilter),
     };
 
     const { count } = await prisma.transaction.deleteMany({ where });
