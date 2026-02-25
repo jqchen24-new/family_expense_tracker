@@ -23,6 +23,7 @@ model Account {
   userId            String   @map("user_id")
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name              String
+  mask              String?  // last 4 digits (Plaid) or null for upload
   source            String   // "plaid" | "upload"
   institutionName   String?  @map("institution_name")
   plaidItemId       String?  @map("plaid_item_id")
