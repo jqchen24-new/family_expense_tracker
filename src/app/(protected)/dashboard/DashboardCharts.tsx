@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
@@ -31,8 +32,23 @@ export function DashboardCharts({
   categoryData: CategoryDatum[];
   monthlySpending: MonthlyDatum[];
 }) {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  const goToCategory = (name: string) => {
+    if (!name) return;
+    router.push(`/transactions?category=${encodeURIComponent(name)}`);
+  };
+
+  const goToMonth = (monthKey: string) => {
+    if (!monthKey || !/^\d{4}-\d{2}$/.test(monthKey)) return;
+    const [y, m] = monthKey.split("-").map(Number);
+    const start = `${y}-${String(m).padStart(2, "0")}-01`;
+    const lastDay = new Date(y, m, 0).getDate();
+    const end = `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+    router.push(`/transactions?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`);
+  };
 
   const hasMonthly = monthlySpending.some((d) => d.total > 0);
 
@@ -74,7 +90,14 @@ export function DashboardCharts({
                     formatter={(value: number | undefined) => [value != null ? `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "", "Spent"]}
                     labelFormatter={(label) => label}
                   />
-                  <Bar dataKey="total" fill="#0ea5e9" radius={[4, 4, 0, 0]} name="Spent" />
+                  <Bar
+                    dataKey="total"
+                    fill="#0ea5e9"
+                    radius={[4, 4, 0, 0]}
+                    name="Spent"
+                    cursor="pointer"
+                    onClick={(data: { month?: string }) => data?.month && goToMonth(data.month)}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -101,29 +124,42 @@ export function DashboardCharts({
               tickFormatter={formatCategoryLabel}
             />
             <Tooltip formatter={(value: number | undefined) => [value != null ? `$${value.toFixed(2)}` : "", "Spent"]} />
-            <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} name="Spent" barCategoryGap="12%" />
+            <Bar
+              dataKey="value"
+              fill="#3b82f6"
+              radius={[0, 4, 4, 0]}
+              name="Spent"
+              barCategoryGap="12%"
+              cursor="pointer"
+              onClick={(data: { name?: string }) => data?.name && goToCategory(data.name)}
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <div className="mt-6 h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={categoryData}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={80}
-              label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
-            >
-              {categoryData.map((_, i) => (
-                <Cell key={i} fill={COLORS[i % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip formatter={(value: number | undefined) => [value != null ? `$${value.toFixed(2)}` : "", "Spent"]} />
-          </PieChart>
-        </ResponsiveContainer>
+      <div className="mt-10 pt-8 border-t border-zinc-200 dark:border-zinc-700">
+        <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400 mb-4">Share of spending</p>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={categoryData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                cursor="pointer"
+                onClick={(data: { name?: string }) => data?.name && goToCategory(data.name)}
+              >
+                {categoryData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value: number | undefined) => [value != null ? `$${value.toFixed(2)}` : "", "Spent"]} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </div>
       </div>
     </div>

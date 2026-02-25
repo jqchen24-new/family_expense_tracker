@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 type Transaction = {
   id: string;
@@ -14,15 +15,34 @@ type Transaction = {
   account: { id: string; name: string; source: string };
 };
 
+function getInitialFilters(searchParams: URLSearchParams) {
+  return {
+    category: searchParams.get("category") ?? "",
+    start: searchParams.get("start") ?? "",
+    end: searchParams.get("end") ?? "",
+    accountId: searchParams.get("accountId") ?? "",
+  };
+}
+
 export default function TransactionsPage() {
+  const searchParams = useSearchParams();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [accountId, setAccountId] = useState("");
   const [accounts, setAccounts] = useState<{ id: string; name: string }[]>([]);
-  const [start, setStart] = useState("");
-  const [end, setEnd] = useState("");
-  const [category, setCategory] = useState("");
+  const initial = getInitialFilters(searchParams);
+  const [accountId, setAccountId] = useState(initial.accountId);
+  const [start, setStart] = useState(initial.start);
+  const [end, setEnd] = useState(initial.end);
+  const [category, setCategory] = useState(initial.category);
+
+  useEffect(() => {
+    const next = getInitialFilters(searchParams);
+    setCategory((c) => (next.category !== c ? next.category : c));
+    setStart((s) => (next.start !== s ? next.start : s));
+    setEnd((e) => (next.end !== e ? next.end : e));
+    setAccountId((a) => (next.accountId !== a ? next.accountId : a));
+  }, [searchParams]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
