@@ -12,7 +12,16 @@ type MonthlyDatum = { month: string; total: number };
 
 function formatMonth(key: string): string {
   const [y, m] = key.split("-").map(Number);
-  return `${MONTH_NAMES[(m ?? 1) - 1]} ${y}`;
+  const year = typeof y === "number" ? String(y).slice(-2) : "";
+  return `${MONTH_NAMES[(m ?? 1) - 1]} '${year}`;
+}
+
+function formatCategoryLabel(name: string): string {
+  const cleaned = name.replace(/_/g, " ").trim();
+  if (cleaned.length <= 14) return cleaned;
+  const words = cleaned.split(/\s+/);
+  if (words.length >= 2) return `${words[0]} ${words[1].slice(0, 3)}`;
+  return cleaned.slice(0, 12) + "…";
 }
 
 export function DashboardCharts({
@@ -48,9 +57,16 @@ export function DashboardCharts({
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart
                   data={monthlySpending.map((d) => ({ ...d, label: formatMonth(d.month) }))}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 50 }}
+                  margin={{ top: 10, right: 10, left: 0, bottom: 56 }}
                 >
-                  <XAxis dataKey="label" angle={-45} textAnchor="end" height={60} tick={{ fontSize: 11 }} />
+                  <XAxis
+                    dataKey="label"
+                    angle={-35}
+                    textAnchor="end"
+                    height={56}
+                    tick={{ fontSize: 11 }}
+                    interval={0}
+                  />
                   <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v}`} />
                   <Tooltip
                     formatter={(value: number | undefined) => [value != null ? `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "", "Spent"]}
@@ -66,10 +82,18 @@ export function DashboardCharts({
 
       <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-6 shadow-sm">
         <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-50 mb-4">Spending by category (this month)</h2>
-        <div className="h-80">
+        <div className="h-96">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={categoryData} margin={{ top: 10, right: 10, left: 0, bottom: 60 }}>
-            <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 12 }} />
+          <BarChart data={categoryData} margin={{ top: 10, right: 10, left: 0, bottom: 120 }}>
+            <XAxis
+              dataKey="name"
+              angle={-45}
+              textAnchor="end"
+              height={100}
+              tick={{ fontSize: 11 }}
+              interval={0}
+              tickFormatter={formatCategoryLabel}
+            />
             <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${v}`} />
             <Tooltip formatter={(value: number | undefined) => [value != null ? `$${value.toFixed(2)}` : "", "Spent"]} />
             <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Spent" />
